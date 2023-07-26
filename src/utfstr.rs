@@ -45,7 +45,7 @@ macro_rules! utfstr_common_impl {
         fn len() -> {}
     } => {
         $(#[$utfstr_meta])*
-        #[allow(clippy::derive_hash_xor_eq)]
+        #[allow(clippy::derived_hash_with_manual_eq)]
         #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
         pub struct $utfstr {
             pub(crate) inner: [$uchar],
@@ -473,6 +473,53 @@ macro_rules! utfstr_common_impl {
                 $utfstr::from_ucstr(value)
             }
         }
+
+        impl serde::Serialize for Box<$utfstr> {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                use serde::{ser::SerializeSeq};
+                let mut seq = serializer.serialize_seq(Some(self.inner.len()))?;
+                for element in &self.inner {
+                    seq.serialize_element(element)?;
+                }
+                seq.end()
+            }
+        }
+
+        impl<'de> serde::Deserialize<'de> for Box<$utfstr> {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct StrVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for StrVisitor {
+                    type Value = Box<$utfstr>;
+
+                    fn expecting(&self, _: &mut std::fmt::Formatter) -> std::fmt::Result {
+                        panic!("BUG: expecting string")
+                    }
+
+                    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+                    where
+                        A: serde::de::SeqAccess<'de>,
+                    {
+                        let mut vec: Vec<$uchar> = Vec::new();
+
+                        while let Some(elem) = seq.next_element()? {
+                            vec.push(elem);
+                        }
+
+                        Ok(unsafe { std::mem::transmute::<_, _>(vec.into_boxed_slice()) })
+                    }
+                }
+
+                deserializer.deserialize_seq(StrVisitor)
+            }
+        }
+
     };
 }
 

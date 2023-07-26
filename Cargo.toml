@@ -22,3 +22,6 @@ winapi = { version = "0.3", features = ["winbase"] }
 
 [package.metadata.docs.rs]
 rustc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+serde = { version = "1.0.175", features = ["derive"] }

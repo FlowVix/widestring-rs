@@ -49,7 +49,7 @@ macro_rules! utfstring_common_impl {
         fn as_mut_vec() -> {}
     } => {
         $(#[$utfstring_meta])*
-        #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize)]
         #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
         pub struct $utfstring {
             inner: Vec<$uchar>,

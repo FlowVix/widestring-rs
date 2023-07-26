@@ -35,7 +35,7 @@ macro_rules! ucstr_common_impl {
         fn display() -> {}
     } => {
         $(#[$ucstr_meta])*
-        #[allow(clippy::derive_hash_xor_eq)]
+        #[allow(clippy::derived_hash_with_manual_eq)]
         #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
         pub struct $ucstr {
             inner: [$uchar],
