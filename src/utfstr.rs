@@ -520,6 +520,41 @@ macro_rules! utfstr_common_impl {
             }
         }
 
+        impl From<&$utfstr> for std::rc::Rc<$utfstr> {
+            #[inline]
+            fn from(v: &$utfstr) -> std::rc::Rc<$utfstr> {
+                let rc = std::rc::Rc::<[$uchar]>::from(v.as_slice());
+                unsafe { std::rc::Rc::from_raw(std::rc::Rc::into_raw(rc) as *const $utfstr) }
+            }
+        }
+        impl From<$utfstring> for std::rc::Rc<$utfstr> {
+            #[inline]
+            fn from(v: $utfstring) -> std::rc::Rc<$utfstr> {
+                std::rc::Rc::from(&v[..])
+            }
+        }
+
+        impl From<&$utfstr> for Box<$utfstr> {
+            #[inline]
+            fn from(s: &$utfstr) -> Box<$utfstr> {
+                let b = Box::<[$uchar]>::from(s.as_slice());
+                unsafe { Box::from_raw(Box::into_raw(b) as *mut $utfstr) }
+            }
+        }
+        impl From<$utfstring> for Box<$utfstr> {
+            #[inline]
+            fn from(v: $utfstring) -> Box<$utfstr> {
+                Box::from(&v[..])
+            }
+        }
+        impl Clone for Box<$utfstr> {
+            fn clone(&self) -> Self {
+                // this makes a copy of the data
+                let b: Box<[$uchar]> = self.as_slice().into();
+                unsafe { Box::from_raw(Box::into_raw(b) as *mut $utfstr) }
+            }
+        }
+
     };
 }
 
